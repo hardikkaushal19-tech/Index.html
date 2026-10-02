@@ -5473,6 +5473,7 @@
       "src/ui/entityContextBridge.js",
       "src/render/cesium/cardPreviews.js",
       "src/layers/aurora/rendering.js",
+      "src/layers/aurora/magneticLocalTime.js",
       "src/layers/aurora/source.js",
       "src/layers/aurora/index.js"
     ],
@@ -6308,6 +6309,7 @@
       "src/time/frameWait.js",
       "src/maps/attribution.js",
       "src/layers/aurora/rendering.js",
+      "src/layers/aurora/magneticLocalTime.js",
       "src/layers/aurora/index.js"
     ],
     "external": [

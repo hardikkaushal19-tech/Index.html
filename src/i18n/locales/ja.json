@@ -4035,5 +4035,10 @@
   "Move down": "下へ移動",
   "Click a shot to go to it, double-click to rename.": "ショットをクリックしてそこへ移動、ダブルクリックで名前を変更します。",
   "Back to live at the starting view": "ライブに戻り、最初の表示へ",
-  "Exit cockpit to fly to a bike share city": "シェアサイクルのある都市へ移動するにはコックピットを終了してください"
+  "Exit cockpit to fly to a bike share city": "シェアサイクルのある都市へ移動するにはコックピットを終了してください",
+  "NOAA SWPC solar wind": "NOAA SWPC 太陽風",
+  "extrapolated": "外挿",
+  "Solar wind feed unavailable": "太陽風フィードを利用できません",
+  "Field lines not re-traced · previous lines kept": "磁力線は再追跡されていません · 前の磁力線を保持",
+  "Magnetosphere": "磁気圏"
 }

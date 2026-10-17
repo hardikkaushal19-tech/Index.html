@@ -4550,5 +4550,10 @@
   "Move down": "نقل لأسفل",
   "Click a shot to go to it, double-click to rename.": "انقر على لقطة للانتقال إليها، وانقر عليها نقرًا مزدوجًا لإعادة تسميتها.",
   "Back to live at the starting view": "العودة إلى البث المباشر في العرض الأولي",
-  "Exit cockpit to fly to a bike share city": "اخرج من قمرة القيادة للانتقال إلى مدينة بها مشاركة دراجات"
+  "Exit cockpit to fly to a bike share city": "اخرج من قمرة القيادة للانتقال إلى مدينة بها مشاركة دراجات",
+  "NOAA SWPC solar wind": "الرياح الشمسية من NOAA SWPC",
+  "extrapolated": "مستقرأ",
+  "Solar wind feed unavailable": "تغذية الرياح الشمسية غير متاحة",
+  "Field lines not re-traced · previous lines kept": "لم تُعَد خطوط المجال · أُبقيت الخطوط السابقة",
+  "Magnetosphere": "الغلاف المغناطيسي"
 }

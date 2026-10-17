@@ -4138,5 +4138,10 @@
   "Move down": "Nach unten verschieben",
   "Click a shot to go to it, double-click to rename.": "Aufnahme anklicken, um zu ihr zu wechseln, Doppelklick zum Umbenennen.",
   "Back to live at the starting view": "Zurück zu Live in der Startansicht",
-  "Exit cockpit to fly to a bike share city": "Cockpit verlassen, um zu einer Stadt mit Bike-Sharing zu fliegen"
+  "Exit cockpit to fly to a bike share city": "Cockpit verlassen, um zu einer Stadt mit Bike-Sharing zu fliegen",
+  "NOAA SWPC solar wind": "NOAA-SWPC-Sonnenwind",
+  "extrapolated": "extrapoliert",
+  "Solar wind feed unavailable": "Sonnenwind-Datenfeed nicht verfügbar",
+  "Field lines not re-traced · previous lines kept": "Feldlinien nicht neu verfolgt · vorherige Linien beibehalten",
+  "Magnetosphere": "Magnetosphäre"
 }

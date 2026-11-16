@@ -3719,5 +3719,8 @@
   "Search layers…": "Pesquisar camadas…",
   "Layer groups": "Grupos de camadas",
   "Jump to {name}": "Ir para {name}",
-  "No layers match": "Nenhuma camada corresponde"
+  "No layers match": "Nenhuma camada corresponde",
+  "Clean view: hide the controls": "Vista limpa: ocultar os controles",
+  "Exit clean view: show the controls": "Sair da vista limpa: mostrar os controles",
+  "{label} (V)": "{label} (V)"
 }

@@ -3545,5 +3545,8 @@
   "Search layers…": "搜索图层…",
   "Layer groups": "图层分组",
   "Jump to {name}": "跳转到{name}",
-  "No layers match": "没有匹配的图层"
+  "No layers match": "没有匹配的图层",
+  "Clean view: hide the controls": "简洁视图：隐藏控件",
+  "Exit clean view: show the controls": "退出简洁视图：显示控件",
+  "{label} (V)": "{label} (V)"
 }

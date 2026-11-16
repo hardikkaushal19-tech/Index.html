@@ -3806,5 +3806,8 @@
   "Search layers…": "Пошук шарів…",
   "Layer groups": "Групи шарів",
   "Jump to {name}": "Перейти до «{name}»",
-  "No layers match": "Немає відповідних шарів"
+  "No layers match": "Немає відповідних шарів",
+  "Clean view: hide the controls": "Чистий інтерфейс: сховати елементи керування",
+  "Exit clean view: show the controls": "Повернути інтерфейс: показати елементи керування",
+  "{label} (V)": "{label} (V)"
 }

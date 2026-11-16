@@ -3632,5 +3632,8 @@
   "Search layers…": "Ebenen suchen…",
   "Layer groups": "Ebenengruppen",
   "Jump to {name}": "Zu {name} springen",
-  "No layers match": "Keine passenden Ebenen"
+  "No layers match": "Keine passenden Ebenen",
+  "Clean view: hide the controls": "Reine Ansicht: Steuerelemente ausblenden",
+  "Exit clean view: show the controls": "Reine Ansicht beenden: Steuerelemente anzeigen",
+  "{label} (V)": "{label} (V)"
 }

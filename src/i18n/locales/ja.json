@@ -3545,5 +3545,8 @@
   "Search layers…": "レイヤーを検索…",
   "Layer groups": "レイヤーのグループ",
   "Jump to {name}": "{name} へ移動",
-  "No layers match": "一致するレイヤーはありません"
+  "No layers match": "一致するレイヤーはありません",
+  "Clean view: hide the controls": "クリーンビュー：操作を隠す",
+  "Exit clean view: show the controls": "クリーンビューを終了：操作を表示",
+  "{label} (V)": "{label} (V)"
 }

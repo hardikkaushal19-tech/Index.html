@@ -3806,5 +3806,8 @@
   "Search layers…": "Поиск слоёв…",
   "Layer groups": "Группы слоёв",
   "Jump to {name}": "Перейти к «{name}»",
-  "No layers match": "Нет подходящих слоёв"
+  "No layers match": "Нет подходящих слоёв",
+  "Clean view: hide the controls": "Чистый вид: скрыть элементы управления",
+  "Exit clean view: show the controls": "Выйти из чистого вида: показать элементы управления",
+  "{label} (V)": "{label} (V)"
 }

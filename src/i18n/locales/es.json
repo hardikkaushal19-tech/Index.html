@@ -3719,5 +3719,8 @@
   "Search layers…": "Buscar capas…",
   "Layer groups": "Grupos de capas",
   "Jump to {name}": "Ir a {name}",
-  "No layers match": "Ninguna capa coincide"
+  "No layers match": "Ninguna capa coincide",
+  "Clean view: hide the controls": "Vista limpia: ocultar los controles",
+  "Exit clean view: show the controls": "Salir de vista limpia: mostrar los controles",
+  "{label} (V)": "{label} (V)"
 }

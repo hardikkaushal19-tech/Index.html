@@ -1,5 +1,6 @@
 import { inputFor } from '../../input/dispatcher.js';
 import { onFollowChanged } from '../../data/followed.js';
+import { ISS_NORAD } from './policy.js';
 
 export function createInteraction({
   state: layerState,
@@ -55,6 +56,17 @@ export function createInteraction({
 
       // Clicking the tracked satellite's own dot — ignore
       if (parts.rendering._hitIsTracked(hit)) return;
+
+      // A click on the ISS's 3D model: it tracks the ISS, as its dot does,
+      // and is ignored while the ISS is tracked already.
+      if (parts.issModel?._hitIsIss?.(hit)) {
+        if (layerState._trackedNorad === ISS_NORAD) return;
+        if (layerState._catalog.has(ISS_NORAD)) {
+          parts.tracking._cancelPendingTrackingRestore();
+          parts.tracking._trackSatellite(ISS_NORAD, { origin: 'user' });
+          return;
+        }
+      }
 
       // A satellite dot (its item id is the NORAD catalog number)
       const noradId = parts.rendering._hitPointId(hit);

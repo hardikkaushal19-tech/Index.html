@@ -252,7 +252,8 @@
     "OPT-IN",
     "{minutes} min",
     "1 min/s",
-    "Status"
+    "Status",
+    "ISS LIVE · NASA"
   ],
   "es": [
     "1 min/s",
@@ -417,7 +418,8 @@
     "NORAD: {id}",
     "Regional",
     "{datasets} · {tiles} · {packs}",
-    "VIRTUAL"
+    "VIRTUAL",
+    "Manual"
   ],
   "fr": [
     "1 min/s",
@@ -1079,7 +1081,8 @@
     "MMSI: {id}",
     "NORAD: {id}",
     "Regional",
-    "VIRTUAL"
+    "VIRTUAL",
+    "Manual"
   ],
   "ru": [
     "1900–1945",
@@ -1277,7 +1280,8 @@
     "ICAO: {id}",
     "NORAD: {id}",
     "MMSI: {id}",
-    "Status"
+    "Status",
+    "ISS LIVE · NASA"
   ],
   "uk": [
     "1900–1945",

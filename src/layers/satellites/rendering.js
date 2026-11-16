@@ -359,6 +359,25 @@ export function createRendering({
     _markDirty(noradId);
   }
 
+  /**
+   * Draw a dot only at eye distances in `range` (`[near, far)` metres), or
+   * at every distance (`undefined`): the ISS's 3D model takes the near range.
+   */
+  function _setPointRange(noradId, range) {
+    const point = layerState._points.get(noradId);
+    if (!point || point.displayRange === range) return;
+    if (range) point.displayRange = range;
+    else delete point.displayRange;
+    _markDirty(noradId);
+  }
+
+  /** The tracked dot's distance range, as `_setPointRange` (sent each frame). */
+  function _setTrackedDotRange(range) {
+    if (!trackedDot || trackedDot.item.displayRange === range) return;
+    if (range) trackedDot.item.displayRange = range;
+    else delete trackedDot.item.displayRange;
+  }
+
   /** Draw a dot in `style` (a `POINT_STYLES` entry), keeping whether it shows. */
   function _setPointStyle(noradId, style) {
     const point = layerState._points.get(noradId);
@@ -665,6 +684,11 @@ export function createRendering({
   function _tickAfterFrame() {
     const now = focusNowMs(Date.now());
 
+    // The ISS as a 3D model up close. First, before the tracked sample below
+    // is refreshed: the follow camera and the tracked dot were placed this
+    // frame from the sample still cached, and the model must sit on it too.
+    parts.issModel?._updateIssModel();
+
     const interval = layerState._trackedNorad ? 200 : POSITION_UPDATE_MS;
     // Space Missions keeps this layer enabled for TLE lookup while deliberately
     // hiding its standalone fleet. Do not rebuild hidden point buffers on the
@@ -698,6 +722,10 @@ export function createRendering({
     // While the Cockpit rides the tracked satellite, keep its marks hidden.
     if (layerState._cockpitSubjectNorad !== null)
       parts.cockpit?._syncCockpitSubjectVisuals();
+
+    // NASA's live video beside the card while the ISS is selected.
+    parts.issLive?._syncIssLive();
+    parts.issCommand?._syncIssCommand();
 
     _updatePointFocus(now);
 
@@ -867,6 +895,8 @@ export function createRendering({
     _clearPoints,
     _pointPosition,
     _hidePoint,
+    _setPointRange,
+    _setTrackedDotRange,
     _restorePoint,
     _addTrackedEntity,
     _removeTrackedEntity,

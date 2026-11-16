@@ -384,11 +384,21 @@ export function createTracking({ state: layerState, services, parts, source }) {
           : t('DOCKED · {name}', { name: companions[0] }),
       );
     }
+    // While the ISS model shows, the card keeps clear of it: the gap follows
+    // the station's size on screen, in steps so the card is not republished
+    // every frame.
+    const clearPx =
+      layerState._trackedNorad === ISS_NORAD
+        ? parts.issModel?._issCardClearPx?.()
+        : null;
+    // The overlay's gap is twice the anchor radius, so half the clearance.
+    const anchorRadiusPx = clearPx ? Math.round(clearPx / 8) * 4 : null;
     const current = readEntityRecord(layerState._trackedEntity)?.labelModel;
     // Compare the WHOLE detail array: comparing only `details[0]` swallowed any
     // change confined to the companions line, so the card would never republish.
     const unchanged =
       current?.title === title &&
+      (current?.anchorRadiusPx ?? null) === anchorRadiusPx &&
       current?.details?.length === details.length &&
       details.every((line, index) => current.details[index] === line);
     if (unchanged) return;
@@ -396,6 +406,7 @@ export function createTracking({ state: layerState, services, parts, source }) {
       title,
       details,
       accent: '#ffd84d',
+      ...(anchorRadiusPx ? { anchorRadiusPx, anchorRadiusScale: null } : {}),
     };
     refreshTrackedReadout(layerState._trackedEntity);
   }
@@ -451,6 +462,10 @@ export function createTracking({ state: layerState, services, parts, source }) {
     entityRecord(layerState._trackedEntity).trackedId = `satellites:${noradId}`;
     entityRecord(layerState._trackedEntity).displayPosition =
       _trackedDisplayCached;
+    // Up close the ISS is a 3D model: the card welds to where it is drawn.
+    if (noradId === ISS_NORAD)
+      entityRecord(layerState._trackedEntity).visualPosition = () =>
+        parts.issModel?._issVisualPosition?.() ?? null;
     _updateTrackedSatelliteLabelModel(initialPos?.altitude ?? null);
 
     const dotPosition = parts.rendering._pointPosition(noradId);

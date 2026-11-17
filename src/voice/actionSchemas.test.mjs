@@ -42,6 +42,7 @@ test('the complete Realtime tool payload pins the manifest-generated layer relea
     // omit top-level anyOf (OpenAI rejects it). Contacts list routing preserves
     // requested radius and center authority in descriptions only.
     // Street Level and GNSS extend the manifest; tracked and analyst aircraft describe broadcasts.
+    // Air quality adds source units, pollutant, averaging period and observation kind; value is no longer universally AQHI.
     // Air quality (ECCC AQHI) extends the manifest.
     // Globe rotation adds one motion; visual keyhole fit and explicit
     // reset guidance/defaults update only move_camera and mode descriptions.
@@ -60,7 +61,7 @@ test('the complete Realtime tool payload pins the manifest-generated layer relea
     // absolute with its -45 default, with steps sent as a direction.
     // show_street_level (map, source, photo) adds one tool.
     // open_stories adds the Stories Explore entry action.
-    '5a2deb65bef5db8fa49ee55dd66efb884e7c3ba97dbdcaad3fada087170d2225',
+    '584eab4892352e2a4a785d230b6e5d28244554b742e1b7129ed9072465486db4',
   );
 });
 

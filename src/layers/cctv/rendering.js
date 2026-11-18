@@ -1,7 +1,10 @@
+import { createCountMarkers } from './countMarkers.js';
+import { addCellCamera, createCameraCell } from '../../data/cctvCellCounts.js';
 import { isHeadingEstimated } from './headingConfidence.js';
 import {
   ACTIVE_CAMERA_COLOR,
   CAMERA_ICON,
+  IDLE_CAMERA_ICON,
   IDLE_CAMERA_COLOR,
   LIVE_CAMERA_COLOR,
   ACTIVE_COVERAGE_CENTER,
@@ -29,6 +32,10 @@ import { eastNorthUp } from '../../geo/frames.js';
 import { poseProjector } from '../../geo/frustum.js';
 import { horizonFrom } from '../../geo/horizon.js';
 import { distance } from '../../geo/vector.js';
+
+const IDLE_ICON_STYLE = { image: IDLE_CAMERA_ICON, color: IDLE_CAMERA_COLOR };
+const ACTIVE_ICON_STYLE = { image: CAMERA_ICON, color: ACTIVE_CAMERA_COLOR };
+const LIVE_ICON_STYLE = { image: CAMERA_ICON, color: LIVE_CAMERA_COLOR };
 
 /** An RGBA colour with another alpha. */
 const withAlpha = (color, alpha) => [color[0], color[1], color[2], alpha];
@@ -139,6 +146,11 @@ export function createRendering({
     // with its first camera.
     set.setColumns?.({ ids: [] });
     layerState._icons = createIconBook(set);
+    layerState._counts = createCountMarkers(
+      services.overlays?.registerWorldOverlayPaintLane,
+      `cctv:${iconSets}:counts`,
+      refreshHorizonCulling,
+    );
     return set.id;
   }
 
@@ -146,6 +158,8 @@ export function createRendering({
   function destroyCameraIcons() {
     layerState._icons?.dispose();
     layerState._icons = null;
+    layerState._counts?.dispose();
+    layerState._counts = null;
   }
 
   /** The icon item a camera record draws, idle and shown, at its position. */
@@ -154,9 +168,8 @@ export function createRendering({
     return {
       id,
       pos: copyPoint(record.position),
-      image: CAMERA_ICON,
+      ...cameraIconStyleFor(record),
       size: [CAMERA_ICON_PX, CAMERA_ICON_PX],
-      color: cameraColorFor(record),
       scale: 1,
       scaleByDistance: CAMERA_SCALE_BY_DISTANCE,
       disableDepthTest: Infinity,
@@ -205,12 +218,12 @@ export function createRendering({
     icons.put({ ...item, pos: copyPoint(record.position) });
   }
 
-  /** Icon color: active wins, then live-capable video feeds, then idle stills. */
-  function cameraColorFor(record) {
+  /** Select the sprite and tint together when a camera changes state. */
+  function cameraIconStyleFor(record) {
     if (record.camera.id === layerState._activeCameraId)
-      return ACTIVE_CAMERA_COLOR;
-    if (parts.model.isVideoFeedCamera(record.camera)) return LIVE_CAMERA_COLOR;
-    return IDLE_CAMERA_COLOR;
+      return ACTIVE_ICON_STYLE;
+    if (parts.model.isVideoFeedCamera(record.camera)) return LIVE_ICON_STYLE;
+    return IDLE_ICON_STYLE;
   }
 
   const {
@@ -223,7 +236,7 @@ export function createRendering({
 
   /**
    * Focus modulation rides the layer's existing animation loop; no additional
-   * scene listener is installed. Only camera-icon alpha changes here — coverage
+   * scene listener is installed. Camera and count icons share the fade. Coverage
    * geometry and monitor-plane styling retain their established cadence.
    */
 
@@ -276,57 +289,59 @@ export function createRendering({
     let writes = 0;
     let transitioning = false;
     let activeCount = 0;
-    for (const record of records || []) {
-      const id = record.camera?.id;
-      const item = icons?.item(id);
-      if (!item) continue;
-      const position = record.position;
-      const scale = item.scale ?? 1;
-      // CCTV never publishes a tracked focus target, so every icon is ambient.
-      const focus = advanceSpriteFocus(item.meta, {
-        // Keep hidden icons in the state/release pass so the active count cannot
-        // drop while a stale dim alpha remains waiting to reappear.
-        screenPosition:
-          item.show === false || !position ? null : screenPositionFor(position),
+    /** A changed focus factor for a camera icon or a painted count. */
+    function changedFocus(owner, position, shown, width, height, current) {
+      const focus = advanceSpriteFocus(owner, {
+        screenPosition: shown && position ? screenPositionFor(position) : null,
         cameraDistance: position ? cameraDistanceFor(position) : Number.NaN,
         nowMs,
         target,
         params,
-        spriteHalfWidthPx: item.size[0] * scale * 0.5,
-        spriteHalfHeightPx: item.size[1] * scale * 0.5,
+        spriteHalfWidthPx: width / 2,
+        spriteHalfHeightPx: height / 2,
       });
       transitioning ||= focus.transitioning;
-      if (focus.active) activeCount += 1;
-      // Order-independent narrow amendment to always-visible icons: CCTV
-      // contacts retain a non-zero floor while yielding near the tracked target.
-      if (focusAlphaNeedsWrite(icons.focus(id), focus.factor, params)) {
-        icons.setFocus(id, focus.factor);
-        writes += 1;
-      }
+      if (focus.active) activeCount++;
+      if (!focusAlphaNeedsWrite(current, focus.factor, params)) return null;
+      writes++;
+      return focus.factor;
     }
+    for (const record of records || []) {
+      const id = record.camera?.id;
+      const item = icons?.item(id);
+      if (!item) continue;
+      const scale = item.scale ?? 1;
+      const factor = changedFocus(
+        item.meta,
+        record.position,
+        item.show !== false,
+        item.size[0] * scale,
+        item.size[1] * scale,
+        icons.focus(id),
+      );
+      if (factor !== null) icons.setFocus(id, factor);
+    }
+    const counts = layerState._counts;
+    const iconWrites = writes;
+    for (const marker of counts?.markers ?? []) {
+      const factor = changedFocus(
+        marker,
+        marker.pos,
+        true,
+        marker.width,
+        marker.height,
+        marker.focus,
+      );
+      if (factor !== null) marker.focus = factor;
+    }
+    if (writes > iconWrites) counts.requestPaint();
     return { writes, transitioning, activeCount, ran: true };
   }
 
   /**
-   * Updates visual styles (colors, widths, visibility) for all camera icons,
-   * coverage polylines, viewshed volumes, and projection entities based on which
-   * camera is active, whether the layer is enabled, and the current
-   * coverage-mode/projection toggle states.
-   */
-  /**
-   * Field-test fix (2026-07-06): horizon-culls camera icons on the CPU as the
-   * icon shader does on the GPU. With the globe hidden (Google-3D
-   * regime) nothing writes far-side depth and the icons are always-on-top, so
-   * the shown set (cards, geometry, the picker) must not include London's
-   * cluster from a US viewpoint.
-   *
-   * The same pass thins the view so a large catalog stays readable and cheap:
-   * icons well off screen hide, and each camera competes for a world-anchored
-   * cell sized to VIEW_CELL_PX at its distance (healthiest first, then a stable
-   * id order). The active camera shows whenever it is above the horizon
-   * and near the screen, even in a crowded cell. The shown records become
-   * `_viewRecords`, the working set for geometry, cards and the camera picker;
-   * the array keeps its identity while the shown set is unchanged.
+   * Group horizon-visible mounts by ground cell. Every cell with a member
+   * near the screen contributes a representative to the picker. Singletons
+   * and the active camera also enter the icon, geometry and card working set.
    *
    * Runs on camera settle, throttled during motion, on resize, enable and
    * activation changes — never per frame.
@@ -365,7 +380,9 @@ export function createRendering({
     const project = screenProjector(pose, width, height);
     const pass = (layerState._viewPassId = (layerState._viewPassId || 0) + 1);
     const shown = [];
+    const picker = [];
     const cells = new Map();
+    const visibleCells = [];
     for (const record of layerState._records) {
       const position = record.position;
       if (!position) continue;
@@ -381,12 +398,12 @@ export function createRendering({
       )
         continue;
       const screen = project(position);
-      if (
-        !screen ||
-        !(screen.x >= minX && screen.x <= maxX) ||
-        !(screen.y >= minY && screen.y <= maxY)
-      )
-        continue;
+      const nearScreen =
+        screen &&
+        screen.x >= minX &&
+        screen.x <= maxX &&
+        screen.y >= minY &&
+        screen.y <= maxY;
       const dx = position.x - viewer.x;
       const dy = position.y - viewer.y;
       const dz = position.z - viewer.z;
@@ -395,21 +412,56 @@ export function createRendering({
         metresPerPixelPerMetre *
         Math.sqrt(dx * dx + dy * dy + dz * dz);
       if (record.camera.id === activeId || !(cellM >= VIEW_MIN_CELL_M)) {
-        record.viewPass = pass;
+        if (!nearScreen) continue;
+        record.viewPass = record.pickerPass = pass;
         shown.push(record);
+        picker.push(record);
         continue;
       }
       const key = worldCellKey(record, cellM);
+      let cell = cells.get(key);
+      if (!cell) {
+        cell = createCameraCell(key);
+        cells.set(key, cell);
+      }
+      addCellCamera(cell, record.camera);
+      record.viewCell = cell;
+      if (!nearScreen) continue;
+      // The picker ranks only candidates that were in its padded viewport.
+      if (!cell.winner) visibleCells.push(cell);
       const rank = viewRank(record);
-      const holder = cells.get(key);
-      if (!holder || rank < holder.rank) cells.set(key, { record, rank });
+      if (rank < cell.rank) {
+        cell.winner = record;
+        cell.rank = rank;
+      }
     }
-    for (const { record } of cells.values()) {
-      record.viewPass = pass;
-      shown.push(record);
+    // Marks each lone camera that a count marker beside it has taken in.
+    layerState._counts?.update(visibleCells, project);
+    for (const cell of visibleCells) {
+      const record = cell.winner;
+      picker.push(record);
+      record.pickerPass = pass;
+      if (cell.count === 1 && !cell.absorbed) {
+        record.viewPass = pass;
+        shown.push(record);
+      }
     }
     const writes = [];
+    let coverageChanged = false;
+    let cardsChanged = false;
     for (const record of layerState._records) {
+      const cell = record.viewCell;
+      record.viewCell = null;
+      const grouped = Boolean(
+        cell?.winner && (cell.count > 1 || cell.absorbed),
+      );
+      if (grouped !== !!record.viewGrouped) {
+        const id = record.camera.id;
+        coverageChanged ||= layerState._coverageCohort?.has(id);
+        cardsChanged ||=
+          layerState._cardIds?.has(id) || layerState._hoverCardId === id;
+      }
+      record.viewGrouped = grouped;
       const item = patchedCameraIcon(record.camera.id, {
         show: record.viewPass === pass,
       });
@@ -421,7 +473,14 @@ export function createRendering({
       previous.length !== shown.length ||
       previous.some((record) => record.viewPass !== pass);
     if (changed) layerState._viewRecords = shown;
-    return changed;
+    const oldPicker = layerState._pickerRecords ?? [];
+    const pickerChanged =
+      picker.length !== oldPicker.length ||
+      oldPicker.some((record) => record.pickerPass !== pass);
+    if (pickerChanged) layerState._pickerRecords = picker;
+    if (coverageChanged) refreshCoverageStyles();
+    if (cardsChanged) parts.cards.pushAmbientCardEntries();
+    return changed || pickerChanged;
   }
 
   /**
@@ -526,6 +585,7 @@ export function createRendering({
     );
     parts.projection.clearProjectionOverlay();
     if (layerState._icons) layerState._icons.show = false;
+    layerState._counts?.hide();
     parts.projection.pauseInactiveProjectionFeeds(null);
   }
 
@@ -535,8 +595,12 @@ export function createRendering({
     const activeRecord = parts.selection.getActiveRecord();
     parts.geometry.ensureActiveCoverageEntities(activeRecord);
     const activeId = activeRecord?.camera.id || null;
-    const coverageVisible =
-      parts.geometry.buildCoverageVisibleSet(activeRecord);
+    const cohort = parts.geometry.buildCoverageVisibleSet(activeRecord);
+    layerState._coverageCohort = cohort;
+    const coverageVisible = new Set();
+    for (const id of cohort) {
+      if (!layerState._recordById.get(id)?.viewGrouped) coverageVisible.add(id);
+    }
     // Drawn coverage needs geometry too (geometryQueue's working set).
     layerState._coverageVisibleIds = coverageVisible;
     const coverageOn = layerState._coverageMode !== 'off';
@@ -553,7 +617,7 @@ export function createRendering({
     for (const record of layerState._records) {
       const isActive = record.camera.id === activeId;
       const icon = patchedCameraIcon(record.camera.id, {
-        color: cameraColorFor(record),
+        ...cameraIconStyleFor(record),
         scale: isActive ? 1.25 : 1.0,
       });
       if (icon) restyled.push(icon);
@@ -865,6 +929,7 @@ export function createRendering({
    * @returns {string|null}
    */
   function pickCameraIdAt(position) {
+    if (layerState._counts?.pickedCell(position)) return null;
     let hit = null;
     try {
       hit = findQuery(layerState._viewer)?.pick(position.x, position.y) ?? null;

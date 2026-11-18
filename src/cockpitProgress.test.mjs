@@ -4,7 +4,10 @@
 // the travelled part.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { cockpitProgressLayout } from './cockpitProgress.js';
+import {
+  cockpitProgressLayout,
+  estimateProgressLabelPx,
+} from './cockpitProgress.js';
 
 const tick = (at, label = null, tone = 'normal') => ({ at, tone, label });
 const label = (text, priority, align = 'center', detail = '') => ({
@@ -141,4 +144,60 @@ test('a long run of calls still lays out, every one a tick or part of one', () =
   assert.equal(count(wide), 60);
   assert.ok(narrow.ticks.length < wide.ticks.length);
   assert.equal(wide.ticks.length, 60);
+});
+
+test('a CJK stop name gets the width its full-width glyphs need', () => {
+  const text = '中央駅前広場東口'; // 8 full-width glyphs
+  // 10 px type, 0.06 em apart.
+  const needPx = text.length * (10 + 0.6);
+  const givenPx = estimateProgressLabelPx({ text, detail: '' });
+  assert.ok(
+    givenPx >= needPx,
+    `${givenPx} px given, about ${needPx} px needed`,
+  );
+  // As many Latin letters are narrower; half-width katakana are as narrow.
+  assert.ok(givenPx > estimateProgressLabelPx({ text: 'CENTRALS' }));
+  assert.equal(
+    estimateProgressLabelPx({ text: 'ｶﾀｶﾅ' }),
+    estimateProgressLabelPx({ text: 'KANA' }),
+  );
+});
+
+test('emoji and other astral glyphs in a progress label get at least 1 em each', () => {
+  // About 1 em in 10 px type, 0.06 em apart.
+  const emPx = 10 + 0.6;
+  for (const [text, needPx] of [
+    ['🚉🚆🚇🚋', 4 * emPx],
+    ['🚆'.repeat(8), 8 * emPx],
+    // Supplementary kana, outside the full-width ranges.
+    ['𛀁𛀂', 2 * emPx],
+    // Mixed: four emoji, a space and two full-width glyphs.
+    ['🚆🚇🚌🚕 乗換', 4 * emPx + 6.4 + 2 * emPx],
+  ]) {
+    const givenPx = estimateProgressLabelPx({ text, detail: '' });
+    assert.ok(
+      givenPx >= needPx + 8,
+      `${text}: ${givenPx} px given, about ${needPx} px needed`,
+    );
+  }
+});
+
+test('a label is as wide as its wider line, its smaller detail line included', () => {
+  // The detail line's <small> is 1/1.2 of 10 px; its 0.6 px spacing is not.
+  const detailEmPx = 10 / 1.2 + 0.6;
+  const detail = '中央駅前'; // 4 full-width glyphs
+  const givenPx = estimateProgressLabelPx({ text: 'GATE', detail });
+  assert.ok(
+    givenPx > estimateProgressLabelPx({ text: 'GATE', detail: '' }),
+    'the wider detail line widens the label',
+  );
+  assert.ok(
+    givenPx >= detail.length * detailEmPx + 8,
+    `${givenPx} px given, about ${detail.length * detailEmPx} px needed`,
+  );
+  // A line takes less room as the smaller detail than as the title.
+  assert.ok(
+    estimateProgressLabelPx({ text: 'A', detail: 'CENTRAL STATION' }) <
+      estimateProgressLabelPx({ text: 'CENTRAL STATION', detail: '' }),
+  );
 });

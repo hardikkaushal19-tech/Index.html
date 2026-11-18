@@ -117,6 +117,7 @@
     "Ironbow",
     "Jazz",
     "LIVE",
+    "Land",
     "Landsat 8/9",
     "Latin",
     "Layout",
@@ -559,6 +560,7 @@
     "GEO",
     "GOOGLE STREET VIEW",
     "Gain",
+    "Gain, cm",
     "Google Street View",
     "Grain",
     "HDG",
@@ -640,6 +642,7 @@
     "San Francisco",
     "Satellites",
     "Saturation",
+    "Solution",
     "Sonar",
     "Soul",
     "Source",
@@ -1308,6 +1311,7 @@
     "3D"
   ],
   "sv": [
+    "Land",
     "STATION",
     "NAV",
     "GEO",

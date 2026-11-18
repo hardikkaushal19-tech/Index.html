@@ -4344,5 +4344,10 @@
   "Move down": "Переместить вниз",
   "Click a shot to go to it, double-click to rename.": "Щёлкните кадр, чтобы перейти к нему, дважды — чтобы переименовать.",
   "Back to live at the starting view": "Вернуться в прямой эфир в начальном виде",
-  "Exit cockpit to fly to a bike share city": "Выйдите из кабины, чтобы перелететь в город с прокатом велосипедов"
+  "Exit cockpit to fly to a bike share city": "Выйдите из кабины, чтобы перелететь в город с прокатом велосипедов",
+  "NOAA SWPC solar wind": "солнечный ветер NOAA SWPC",
+  "extrapolated": "экстраполяция",
+  "Solar wind feed unavailable": "Данные о солнечном ветре недоступны",
+  "Field lines not re-traced · previous lines kept": "Силовые линии не пересчитаны · оставлены прежние",
+  "Magnetosphere": "Магнитосфера"
 }

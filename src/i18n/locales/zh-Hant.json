@@ -4035,5 +4035,10 @@
   "Move down": "下移",
   "Click a shot to go to it, double-click to rename.": "單擊鏡頭即可轉到該鏡頭，雙擊可重命名。",
   "Back to live at the starting view": "回到實時並返回初始視圖",
-  "Exit cockpit to fly to a bike share city": "退出駕駛艙以飛往有共享單車的城市"
+  "Exit cockpit to fly to a bike share city": "退出駕駛艙以飛往有共享單車的城市",
+  "NOAA SWPC solar wind": "NOAA SWPC 太陽風",
+  "extrapolated": "外推",
+  "Solar wind feed unavailable": "太陽風數據源不可用",
+  "Field lines not re-traced · previous lines kept": "磁力線未重新追蹤 · 保留先前的磁力線",
+  "Magnetosphere": "磁層"
 }

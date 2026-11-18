@@ -2058,6 +2058,82 @@ feed's place, cut to 40 characters (`earthquakeMarkLabel` in
 `src/layers/earthquakes/model.js`: `M6.4 · 113 km SSE of Lata, Solomon
 Islands`, or `M6.4` with no place).
 
+Clicking a quake's disc selects it; clicking its magnitude label (what a far
+view can hit) also flies the camera there through the world-focus request
+(`earthquake` framing in `src/worldFocus.js`). The selected quake shows a card
+(`describeEarthquake`): magnitude and USGS class (`M5.5 · Moderate`), a
+six-step class meter with the depth band, place, UTC time and source; with a
+USGS event id the card opens that event's page. The selection is also the
+shared context selection, so "what's selected" answers with it. Its disc is
+painted with a gradient fading to the outer circle and wavy contour lines
+(shaped by the quake's id, never crossing) under the labels. The package takes
+clicks, picking, context, focus, the opener, the painter and the translator by
+injection (`src/app/layers/earthquakes.js`); without input and picking it draws
+and takes no clicks, and its labels stay non-interactive.
+On a coarse pointer, a nearby FIRMS or CCTV icon that requires an exact hit
+does not swallow a quake card or label tap, or a tap on a vessel's own card.
+Owners that pick nearby contacts register as `expanded` pick owners: flights,
+military aircraft, vessels, radio and Street Level, and a quake card or label
+yields to one the shared touch contact (14 px) reaches. Flights, military and
+vessels act on that contact, and so do radio and Street Level, which also pick
+through their own windows (17 and 9 px). A station or Street Level item found
+only through that window, not as the exact hit or the touch contact, yields to
+another layer's card or label painted over it, so a quake card or label beside
+one acts alone, with a mouse or a coarse pointer; under such a card, their own
+touch contact stays theirs even when the window names another item. Fire and
+CCTV cards in turn
+yield to a touch contact whose layer acts on it. The aircraft a layer already
+tracks and Street Level's position marker are passive picks, since a click on
+either does nothing. The pick registry records which owners act on a click's
+exact hit and touch contact when the click first reads them
+(`rememberClickPickActions`), and every layer asks that record for the rest of
+the click, so an aircraft that starts tracking during the click does not leave
+it to a later card handler as well. Fire, CCTV and vessel cards, like the
+quake's, act over a passive owner's pick (a flight trail, the directions
+route); with no card there, that pick still leaves a selection alone. Context
+(`src/ui/entityContextBridge.js`) names what a click identifies, except under a
+world-overlay card or label when the item's owner does not act on that hit
+(`cardKeepsClick` in `src/data/pickedContext.js`): a passive route, or a fire
+or camera reached only as a nearby contact. The card takes that click.
+Quake discs are deliberately not registered in the pick-ownership registry,
+like drone airspace and fire perimeters: sibling layers read a disc as empty
+space, so their cards, near-miss taps and deselection work over a quake as
+before. When another layer's card or label is painted over a disc (a fire card
+on a large quake), the quake handler yields to it rather than selecting the
+quake beneath. The same rule holds the other way: drone airspace and fire
+perimeters do not select a zone or incident from a shape hit while another
+layer's card or label is the topmost overlay entry, so a quake card or
+magnitude label over one of them acts once, as the quake's. Items of layers
+that never act on clicks (air-quality stations, traffic lines, OSM places) do
+not block the quake card or labels. A bare area click with nothing painted on
+top still selects the area and clears the quake selection. These rules hold in
+any listener order because world-overlay hit rectangles are what is painted on
+screen until the next paint: an overlay change (a click subscriber publishing
+its selection card) no longer clears them mid-click, and a paint that draws
+nothing clears them (`src/overlays/worldOverlay.js`).
+Card consumers resolve the unfiltered top painted entry before acting, so a
+covered vessel, fire, wildlife, news, CCTV, perimeter, ghost-map or shipwreck
+card does not act alongside the card above it; drone-airspace shapes use the
+same top-entry check (their cards are not interactive). A top news or wildlife
+card still acts over another layer's scene item, as before, so a card over a
+flight trail (registered as a no-op for every layer) or a directions route is
+never a dead click. A click on another layer's card does not activate a covered
+card of these layers or clear their selection; a marker of theirs under that
+card is still theirs to select. Flight trails and the directions route line and
+markers are passive pick owners (`registerPickOwner(…, { passive })`): still
+not empty space (`isOwnedByOtherLayer`), but `isActedOnByOtherLayer` leaves
+them out, so the quake card and magnitude labels act over them, as do fire,
+vessel and CCTV cards. Directions selects only its maneuver steps, though any
+other click still clears a selected step. Submarine cables and rocket
+launches, whose own overlays are not
+interactive, stand aside when any overlay entry is under the click, so a card
+or label over a cable or a launch marker acts once. Layers whose shapes stand
+aside like this (drone airspace, fire perimeters, quake discs, cables,
+launches) register them with `registerCardBackground`, and a live top CCTV card
+acts over any shape `isCardBackground` names; unknown identified objects and
+registered foreign owners still block it. An empty-map click keeps its existing
+deselection behavior.
+
 Air quality (`./layers/air-quality`) draws its station discs as one renderer
 draw set of ground-clamped fills and reads the view through the camera port; it
 no longer reaches Cesium, so a caller handing it a Cesium viewer,
@@ -8461,6 +8537,16 @@ on it.
   per frame, it holds NO continuous-render hold — the governor stays idle with
   earthquakes on, and the manager's `layer-tick` / `layer-visibility` requests
   carry new data to the screen. Pinned in `src/data/earthquakes.test.mjs`.
+  The one animation is the selected quake's contour lines
+  (`src/app/layers/earthquakeRipples.js`), painted on the world overlay, not
+  the ground set: they ask for frames for `RIPPLE_ACTIVE_CYCLES` (3) runs out
+  to the disc's edge after a selection (about 14 s), only while the disc is on
+  screen, then rest as still contours and ask for none. A parked camera with a
+  quake selected therefore returns to idle. A feed refresh updates the
+  selected quake in place: it neither runs the contours again nor takes back
+  a shared selection made since; only a click or a label's activation does.
+  Selecting fades that one disc's flat fill once (an `upsert`, not per frame)
+  under the painted gradient.
 - **Geocode framing has an off-centre sanity gate.** A viewport that is both
   bigger than any city (>300 km diagonal) and not centred on its own geocoded
   location (anchor >15% of the diagonal from the centroid) is replaced by a

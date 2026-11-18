@@ -215,14 +215,23 @@ export function createFirePerimetersLayer({
     // so claiming these large ground polygons would make FIRMS/vessel/CCTV
     // cards inert anywhere over a perimeter. Unowned, our picks read as
     // "empty space" to siblings — the pre-existing behavior for the globe.
+    // Our shapes stand aside for a card painted over them (below), so that
+    // card's layer may act on the click; without a hit-test they cannot.
+    if (overlayHost?.hitTest)
+      picking?.registerCardBackground?.(
+        layer.id,
+        (hit) => pickedIncidentId(hit) !== null,
+      );
     _clickSubscription = inputFor(_viewer).onClick((event) => {
       // A click on the incident card itself opens its InciWeb page (when the
       // incident has one) and never disturbs the selection.
       const cardHit = overlayHost.hitTest?.(
         event.screenPosition?.x,
         event.screenPosition?.y,
-        { sourceId: PERIMETER_OVERLAY_SOURCE_ID },
       );
+      // Only the top painted card owns the click; this area's shapes are
+      // background when another layer has painted a card or label over them.
+      if (cardHit && cardHit.sourceId !== PERIMETER_OVERLAY_SOURCE_ID) return;
       if (cardHit && cardHit.entryId === _selectedCardId) {
         if (_selectedLink && openExternal) openExternal(_selectedLink);
         return;
@@ -252,6 +261,7 @@ export function createFirePerimetersLayer({
   function removeClickHandler() {
     _clickSubscription?.();
     _clickSubscription = null;
+    picking?.unregisterCardBackground?.(layer.id);
   }
 
   function clearSelection() {
